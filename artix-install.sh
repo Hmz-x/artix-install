@@ -130,6 +130,26 @@ network_config()
 	pacman -S dhclient
 }
 
+set_dotlocal()
+{
+	mkdir -p /home/"${user}"/.local/bin /home/"${user}"/.local/dotfiles \ 
+		/home/"${user}"/.local/src /home/"${user}"/.local/lib \
+		/home/"${user}"/.local/share /home/"${user}"/.local/builds
+}
+
+get_username()
+{
+	read -p "Enter username: " user
+}
+
+group_config()
+{
+	groupadd seatd
+
+	usermod root -a -G audio,input,seatd
+	usermod "$user" -a -G network,wheel,audio,disk,input,storage,video,seatd
+}
+
 parse_opts()
 {
 	# Parse and evaluate each option one by one 
@@ -148,6 +168,9 @@ parse_opts()
 				set_bootloader
 				set_users
 				network_config;;
+			config_fresh)
+				get_username
+				exit;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
 				exit 0;;
