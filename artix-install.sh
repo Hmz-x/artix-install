@@ -1,7 +1,22 @@
 #!/bin/sh
 
+# Program data
+IFACE="eth0"
+ZONE="America/Indiana/Indianapolis"
+LOCALE_1="en_US ISO-8859-1"
+LOCALE_2="en_US.UTF-8 UTF-8"
+boot_sys="BIOS"
+
 # Skip partitioning
 
+determine_boot()
+{
+	if [ -d /sys/firmware/efi ]; then
+		boot_sys="UEFI"
+	else
+		boot_sys="BIOS"
+	fi
+}
 
 format_partitions()
 {
@@ -9,7 +24,7 @@ format_partitions()
 	mkfs.ext4 -L ROOT /dev/sda2
 	mkfs.ext4 -L HOME /dev/sda3
 	mkswap -L SWAP /dev/sda1
-	if [ -d /sys/firmware/efi ]; then
+	if [ "$boot_sys" = "UEFI" ]; then
 		mkfs.fat -F 32 /dev/sda4
 		fatlabel /dev/sda4 BOOT
 	else
@@ -30,16 +45,14 @@ mount_partitions()
 
 set_ethernet()
 {
-	iface="eth0"
 
 	rfkill unblock 0
-	if ip a | grep -q "inet .*${iface}" && 
-		ip link show "$iface" | grep -q "state UP"; then
+	if ip a | grep -q "inet .*${IFACE}" && ip link show "$IFACE" | grep -q "state UP"; then
 		echo "Ethernet connected."
-	elif
+	else
 		echo "Ethernet not connected."
 		echo "Running dhclient..."
-		dhclient "$iface"	
+		dhclient "$IFACE"	
 	fi	
 }
 
@@ -56,12 +69,67 @@ fstab_n_chroot()
 	echo "$fstabgen_data"
 	echo "$fstabgen_data" >> /mnt/etc/fstab
 
-	read "Press enter key to chroot..."
+	read -p "Press enter key to chroot..."
 	artix-chroot /mnt
 }
 
+time_config()
+{
+	ln -sf /usr/share/zoneinfo/"${ZONE}" /etc/localtime
+	hwclock --systohc
+
+	echo "$LOCALE_1" > /etc/locale.gen
+	echo "$LOCALE_2" >> /etc/locale.gen
+	locale-gen
+	
+	echo "export LANG=\"${LOCALE_2}\"" > /etc/locale.conf
+	echo "export LC_COLLATE=\"C\"" > /etc/locale.conf
+}
+
+set_bootloader()
+{
+	pacman -S grub os-prober efibootmgr
+	if [ "$boot_sys" = "BIOS" ]; then
+		grub-install --recheck /dev/sda
+	else
+		grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub
+	fi
+	grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+set_users()
+{
+	echo "Enter new password for root user."
+	passwd
+
+	read -p "Enter new username: " username
+	useradd -m "$username"	
+
+	echo "Enter new password for $username."
+	passwd $username
+}
+
+network_config()
+{
+
+	read -p "Enter new hostname: " hostname
+	echo "$hostname" > /etc/hostname
+
+	echo "127.0.0.1        localhost" > /etc/hosts
+	echo "::1			   localhost" >> /etc/hosts
+	echo "127.0.0.1        ${hostname}.localhost ${hostname}" >> /etc/hosts
+
+	echo "hostname=\'${hostname}\'" > /etc/conf.d/hostname
+	pacman -S dhclient
+}
+
+determine_boot
 format_partitions
 mount_partitions
 set_ethernet
 install_sys
 fstab_n_chroot
+time_config
+set_bootloader
+set_users
+network_config
