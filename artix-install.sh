@@ -72,6 +72,8 @@ fstab_n_chroot()
 	fstabgen_data="$(fstabgen -U /mnt)"
 	echo "Fstabgen data:"
 	echo "$fstabgen_data"
+	
+	read -p "Press enter key confirm fstabgen data..."
 	echo "$fstabgen_data" >> /mnt/etc/fstab
 
 	read -p "Press enter key to chroot..."
@@ -139,22 +141,21 @@ parse_opts()
 				mount_partitions
 				set_ethernet
 				install_sys
-				fstab_n_chroot
-				shift;;
+				fstab_n_chroot;;
 			config_base)
+				determine_boot
 				time_config
 				set_bootloader
 				set_users
-				network_config
-				shift;;
+				network_config;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
-				exit 0
-				shift;;
+				exit 0;;
 			*) 
-				echo "Unknown option '$1'"
-				shift;;
+				echo "Unknown option '$1'";;
 		esac
 		shift
 	done
 }
+
+parse_opts "$@"
