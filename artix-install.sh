@@ -6,6 +6,11 @@ ZONE="America/Indiana/Indianapolis"
 LOCALE_1="en_US ISO-8859-1"
 LOCALE_2="en_US.UTF-8 UTF-8"
 boot_sys="BIOS"
+PROGRAM_NAME="artix-install.sh"
+PROGRAM_HELP=\
+"
+usage: ${PROGRAM_NAME} [install_base] [config_base]" 
+
 
 # Skip partitioning
 
@@ -88,7 +93,7 @@ time_config()
 
 set_bootloader()
 {
-	pacman -S grub os-prober efibootmgr
+	pacman -S vim grub os-prober efibootmgr
 	if [ "$boot_sys" = "BIOS" ]; then
 		grub-install --recheck /dev/sda
 	else
@@ -119,17 +124,37 @@ network_config()
 	echo "::1			   localhost" >> /etc/hosts
 	echo "127.0.0.1        ${hostname}.localhost ${hostname}" >> /etc/hosts
 
-	echo "hostname=\'${hostname}\'" > /etc/conf.d/hostname
+	echo "hostname='${hostname}'" > /etc/conf.d/hostname
 	pacman -S dhclient
 }
 
-determine_boot
-format_partitions
-mount_partitions
-set_ethernet
-install_sys
-fstab_n_chroot
-time_config
-set_bootloader
-set_users
-network_config
+parse_opts()
+{
+	# Parse and evaluate each option one by one 
+	while [ "$#" -gt 0 ]; do
+		case "$1" in
+			install_base)
+				determine_boot
+				format_partitions
+				mount_partitions
+				set_ethernet
+				install_sys
+				fstab_n_chroot
+				shift;;
+			config_base)
+				time_config
+				set_bootloader
+				set_users
+				network_config
+				shift;;
+			-h|--help)
+				printf -- "%s\n" "$PROGRAM_HELP"
+				exit 0
+				shift;;
+			*) 
+				echo "Unknown option '$1'"
+				shift;;
+		esac
+		shift
+	done
+}
