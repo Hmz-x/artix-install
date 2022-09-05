@@ -1,11 +1,14 @@
 #!/bin/sh
 
-# Program data
+# Program config data
 IFACE="eth0"
 ZONE="America/Indiana/Indianapolis"
 LOCALE_1="en_US ISO-8859-1"
 LOCALE_2="en_US.UTF-8 UTF-8"
-boot_sys="BIOS"
+
+# Program constant data
+DOTFILES_REPO='https://github.com/Hmz-x/dotfiles'
+YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
 PROGRAM_HELP=\
 "
@@ -80,7 +83,7 @@ fstab_n_chroot()
 	artix-chroot /mnt
 }
 
-time_config()
+set_time()
 {
 	ln -sf /usr/share/zoneinfo/"${ZONE}" /etc/localtime
 	hwclock --systohc
@@ -130,24 +133,55 @@ network_config()
 	pacman -S dhclient
 }
 
-set_dotlocal()
-{
-	mkdir -p /home/"${user}"/.local/bin /home/"${user}"/.local/dotfiles \ 
-		/home/"${user}"/.local/src /home/"${user}"/.local/lib \
-		/home/"${user}"/.local/share /home/"${user}"/.local/builds
-}
-
 get_username()
 {
 	read -p "Enter username: " user
 }
 
-group_config()
+set_groups()
 {
 	groupadd seatd
 
 	usermod root -a -G audio,input,seatd
 	usermod "$user" -a -G network,wheel,audio,disk,input,storage,video,seatd
+}
+
+install_packages()
+{
+	# Packages by line: X stuff, language utils, workflow utils, general utils, 
+	# WM stuff, fonts
+	packages="xorg-server " \
+	"cmake python3 " \
+	"vim rxvt-unicode zathura-git zathura-pdf-poppler-git" \
+	"man-db aspell aspell-en mpv" \ 
+	"noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome " 
+	"herbstluftwm timeshift pulseaudio pulseaudio-alsa pamixer-git lemonbar-xft-git " \
+	"mpc-git mpd"
+}
+
+set_dotlocal()
+{
+	# Create .local directories
+	mkdir -p "/home/${user}/.local/bin" "/home/${user}/.local/src" \
+		"/home/${user}/.local/lib" "/home/${user}/.local/share" \
+		"/home/${user}/.local/builds"
+	
+	# Set up dotfiles dir
+	cd "/home/${user}/.local/"
+	#Cpacman -Qi git 2> /dev/null || 
+	git clone "$DOTFILES_REPO"
+}
+
+set_yay()
+{	
+	# Update packages & install git
+	pacman -Syu
+	pacman -S git
+
+	cd "/home/${user}/.local/builds"
+	git clone "$YAY_REPO"
+	cd yay
+	makepkg -si
 }
 
 parse_opts()
@@ -164,12 +198,16 @@ parse_opts()
 				fstab_n_chroot;;
 			config_base)
 				determine_boot
-				time_config
+				set_time
 				set_bootloader
 				set_users
 				network_config;;
 			config_fresh)
 				get_username
+				set_groups
+				set_yay
+				install_packages
+				set_dotlocal
 				exit;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
