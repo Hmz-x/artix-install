@@ -12,10 +12,7 @@ YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
 PROGRAM_HELP=\
 "
-usage: ${PROGRAM_NAME} [install_base] [config_base]" 
-
-
-# Skip partitioning
+usage: ${PROGRAM_NAME} [install_base] [config_base] [config_fresh]" 
 
 determine_boot()
 {
@@ -171,6 +168,12 @@ install_packages()
 	mpc-git mpd
 }
 
+set_home()
+{
+	mkdir -p "/home/${user}/Documents/pics" "/home/${user}/Videos" \
+		"/home/${user}/Music" "/home/${user}/Downloads"
+}
+
 set_dotlocal()
 {
 	# Create .local directories
@@ -239,8 +242,8 @@ parse_opts()
 				set_groups
 				set_yay
 				install_packages
-				set_dotlocal
-				exit;;
+				set_home
+				set_dotlocal;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
 				exit 0;;
