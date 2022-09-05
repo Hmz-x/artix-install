@@ -146,32 +146,6 @@ set_groups()
 	usermod "$user" -a -G network,wheel,audio,disk,input,storage,video,seatd
 }
 
-install_packages()
-{
-	# Packages by line: X stuff, language utils, workflow utils, general utils, 
-	# WM stuff, fonts
-	packages="xorg-server " \
-	"cmake python3 " \
-	"vim rxvt-unicode zathura-git zathura-pdf-poppler-git" \
-	"man-db aspell aspell-en mpv" \ 
-	"noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome " 
-	"herbstluftwm timeshift pulseaudio pulseaudio-alsa pamixer-git lemonbar-xft-git " \
-	"mpc-git mpd"
-}
-
-set_dotlocal()
-{
-	# Create .local directories
-	mkdir -p "/home/${user}/.local/bin" "/home/${user}/.local/src" \
-		"/home/${user}/.local/lib" "/home/${user}/.local/share" \
-		"/home/${user}/.local/builds"
-	
-	# Set up dotfiles dir
-	cd "/home/${user}/.local/"
-	#Cpacman -Qi git 2> /dev/null || 
-	git clone "$DOTFILES_REPO"
-}
-
 set_yay()
 {	
 	# Update packages & install git
@@ -184,8 +158,66 @@ set_yay()
 	makepkg -si
 }
 
+install_packages()
+{
+	# Packages by line: X stuff, language utils, workflow utils, general utils, 
+	# fonts, WM stuff
+	yay -S xorg-server \
+	cmake python3 \
+	vim rxvt-unicode zathura-git zathura-pdf-poppler-git \
+	man-db aspell aspell-en mpv \ 
+	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
+	herbstluftwm timeshift pulseaudio pulseaudio-alsa pamixer-git lemonbar-xft-git \
+	mpc-git mpd
+}
+
+set_dotlocal()
+{
+	# Create .local directories
+	mkdir -p "/home/${user}/.local/bin" "/home/${user}/.local/src" \
+		"/home/${user}/.local/lib" "/home/${user}/.local/share" \
+		"/home/${user}/.local/builds"
+	
+	# Set up dotfiles dir
+	cd "/home/${user}/.local/"
+	git clone "$DOTFILES_REPO"
+
+	# Bash stuff
+	cp "/home/${user}/.local/dotfiles/bash/.bashrc" "/home/${user}/"
+	cp "/home/${user}/.local/dotfiles/bash/.bashrc" /root/
+	cp "/home/${user}/.local/dotfiles/bash/.bash_profile" "/home/${user}/"
+
+	# X stuff
+	cp "/home/${user}/.local/dotfiles/.xinitrc" "/home/${user}/"
+	cp "/home/${user}/.local/dotfiles/.Xresources" "/home/${user}/"
+
+	# WM, System, & Misc stuff
+	cp -r "/home/${user}/.local/dotfiles/WM" "/home/${user}/.local/bin/"
+	cp -r "/home/${user}/.local/dotfiles/misc" "/home/${user}/.local/bin/"
+	cp -r "/home/${user}/.local/dotfiles/system" "/home/${user}/.local/bin/"
+
+	# Etc stuff
+	cp "/home/${user}/.local/dotfiles/etc/"* /etc/
+
+	# Herbstluftwm stuff
+	cp "/home/${user}/.local/dotfiles/herbstluftwm/autostart" \
+		"/home/${user}/.config/herbstherbstluftwm/"
+	
+	# Mpd stuff
+	mkdir "/home/${user}/.config/mpd/"
+	cp "/home/${user}/.local/dotfiles/mpd/mpd.conf" "/home/${user}/.config/mpd/"
+
+	# Vim stuff
+	cp "/home/${user}/.local/dotfiles/vim/.vimrc" "/home/${user}/"
+}
+
 parse_opts()
 {
+	if (($UID!=0)); then
+		echo "Run as root. Exitting." 2>&1
+		exit 1
+	fi
+
 	# Parse and evaluate each option one by one 
 	while [ "$#" -gt 0 ]; do
 		case "$1" in
@@ -219,4 +251,4 @@ parse_opts()
 	done
 }
 
-parse_opts "$@"
+parse_opts $@
