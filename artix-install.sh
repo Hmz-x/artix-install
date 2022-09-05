@@ -10,9 +10,7 @@ LOCALE_2="en_US.UTF-8 UTF-8"
 DOTFILES_REPO='https://github.com/Hmz-x/dotfiles'
 YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
-PROGRAM_HELP=\
-"
-usage: ${PROGRAM_NAME} [install_base] [config_base] [config_fresh]" 
+PROGRAM_HELP="usage: ${PROGRAM_NAME} [install_base] [config_base] [config_fresh]" 
 
 determine_boot()
 {
@@ -133,6 +131,16 @@ network_config()
 get_username()
 {
 	read -p "Enter username: " user
+	read -p "Username is ${user}. Proceed: [Y/n] " user_ans
+
+	if [ -n "$user_ans" ] && [ "$user_ans" != "y" ] && [ "$user_ans" != "Y" ]; then
+		echo "Username is not confirmed. Exitting." 2>&1
+		exit 1
+	fi
+
+	# Add user if user does not exist on system
+	id "$user" &> /dev/null || useradd -m "$user"
+
 }
 
 set_groups()
@@ -149,41 +157,38 @@ set_yay()
 	pacman -Syu
 	pacman -S git
 
-	cd "/home/${user}/.local/builds"
-	git clone "$YAY_REPO"
-	cd yay
-	makepkg -si
+	su "$user" -c "cd \"/home/${user}/.local/builds\" && git clone \"$YAY_REPO\" &&
+		cd yay && makepkg -si"
 }
 
 install_packages()
 {
 	# Packages by line: X stuff, language utils, workflow utils, general utils, 
 	# fonts, WM stuff
-	yay -S xorg-server \
+	su hkm -c "yay -S xorg-server \
 	cmake python3 \
-	vim rxvt-unicode zathura-git zathura-pdf-poppler-git \
-	man-db aspell aspell-en mpv \ 
+	vim rxvt-unicode zathura-git zathura-pdf-poppler-git openssh \
+	man-db aspell aspell-en mpv networkmanager networkmanager-openrc nm-connection-editor \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
-	herbstluftwm timeshift pulseaudio pulseaudio-alsa pamixer-git lemonbar-xft-git \
-	mpc-git mpd
+	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa cxxopts-git pamixer-git \
+	lemonbar-xft-git mpc-git mpd"
 }
 
 set_home()
 {
-	mkdir -p "/home/${user}/Documents/pics" "/home/${user}/Videos" \
-		"/home/${user}/Music" "/home/${user}/Downloads"
+	su "$user" -c "mkdir -p \"/home/${user}/Documents/pics\" \"/home/${user}/Videos\" \
+		\"/home/${user}/Music\" \"/home/${user}/Downloads\" \"/home/${user}/.config\" \
+		\"/home/${user}/.local/builds\""
 }
 
 set_dotlocal()
 {
 	# Create .local directories
-	mkdir -p "/home/${user}/.local/bin" "/home/${user}/.local/src" \
-		"/home/${user}/.local/lib" "/home/${user}/.local/share" \
-		"/home/${user}/.local/builds"
-	
+	su "$user" -c "mkdir -p \"/home/${user}/.local/bin\" \"/home/${user}/.local/src\" \
+		\"/home/${user}/.local/lib\" \"/home/${user}/.local/share\""
+			
 	# Set up dotfiles dir
-	cd "/home/${user}/.local/"
-	git clone "$DOTFILES_REPO"
+	su "$user" -c "cd \"/home/${user}/.local/\"; git clone \"$DOTFILES_REPO\""
 
 	# Bash stuff
 	cp "/home/${user}/.local/dotfiles/bash/.bashrc" "/home/${user}/"
@@ -191,8 +196,8 @@ set_dotlocal()
 	cp "/home/${user}/.local/dotfiles/bash/.bash_profile" "/home/${user}/"
 
 	# X stuff
-	cp "/home/${user}/.local/dotfiles/.xinitrc" "/home/${user}/"
-	cp "/home/${user}/.local/dotfiles/.Xresources" "/home/${user}/"
+	cp "/home/${user}/.local/dotfiles/X/.xinitrc" "/home/${user}/"
+	cp "/home/${user}/.local/dotfiles/X/.Xresources" "/home/${user}/"
 
 	# WM, System, & Misc stuff
 	cp -r "/home/${user}/.local/dotfiles/WM" "/home/${user}/.local/bin/"
@@ -203,11 +208,12 @@ set_dotlocal()
 	cp "/home/${user}/.local/dotfiles/etc/"* /etc/
 
 	# Herbstluftwm stuff
+	su "$user" -c "mkdir \"/home/${user}/.config/herbstluftwm/\""
 	cp "/home/${user}/.local/dotfiles/herbstluftwm/autostart" \
-		"/home/${user}/.config/herbstherbstluftwm/"
+		"/home/${user}/.config/herbstluftwm/"
 	
 	# Mpd stuff
-	mkdir "/home/${user}/.config/mpd/"
+	su "$user" -c "mkdir \"/home/${user}/.config/mpd/\""
 	cp "/home/${user}/.local/dotfiles/mpd/mpd.conf" "/home/${user}/.config/mpd/"
 
 	# Vim stuff
@@ -240,9 +246,9 @@ parse_opts()
 			config_fresh)
 				get_username
 				set_groups
+				set_home
 				set_yay
 				install_packages
-				set_home
 				set_dotlocal;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
