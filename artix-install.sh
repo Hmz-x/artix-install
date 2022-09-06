@@ -111,7 +111,7 @@ set_users()
 	useradd -m "$username"	
 
 	echo "Enter new password for $username."
-	passwd $username
+	passwd "$username"
 }
 
 network_config()
@@ -164,14 +164,15 @@ set_yay()
 install_packages()
 {
 	# Packages by line: X stuff, language utils, workflow utils, general utils, 
-	# fonts, WM stuff
-	su hkm -c "yay -S xorg-server \
-	cmake python3 \
+	# media utils, fonts, WM stuff + GUI programs
+	su "$user" -c "yay -S xorg-server xorg-xinit \
+	cmake python3 cxxopts-git \
 	vim rxvt-unicode zathura-git zathura-pdf-poppler-git openssh \
-	man-db aspell aspell-en mpv networkmanager networkmanager-openrc nm-connection-editor \
+	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor \
+	ffmpeg mpv youtube-dl python-spotdl \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
-	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa cxxopts-git pamixer-git \
-	lemonbar-xft-git mpc-git mpd"
+	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git \
+	lemonbar-xft-git mpc-git mpd brave-bin"
 }
 
 set_home()
