@@ -139,8 +139,7 @@ get_username()
 	fi
 
 	# Add user if user does not exist on system
-	id "$user" &> /dev/null || useradd -m "$user"
-
+	id "$user" &> /dev/null || { useradd -m "$user" && passwd "$user"; }
 }
 
 set_groups()
