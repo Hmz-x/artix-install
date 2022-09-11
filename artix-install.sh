@@ -153,12 +153,10 @@ set_groups()
 
 set_home()
 {
-	#su "$user" -c "mkdir -p \"/home/${user}/Documents/pics\" \"/home/${user}/Videos\" \
-		#\"/home/${user}/Music\" \"/home/${user}/Downloads\" \"/home/${user}/.config\" \
-		#\"/home/${user}/.local/builds\""
 	install -d --owner="$user" --group="$user" --mode=755 \
-		"/home/${user}/Documents/pics" "/home/${user}/Videos" "/home/${user}/Music" \
-		"/home/${user}/Documents/Downloads" "/home/${user}/.local/builds"
+		"/home/${user}/Documents" "/home/${user}/Documents/pics" "/home/${user}/Videos" \
+		"/home/${user}/Music" "/home/${user}/Downloads" "/home/${user}/.local/" \
+		"/home/${user}/.local/builds"
 }
 
 set_yay()
@@ -188,7 +186,7 @@ install_packages()
 set_dotlocal()
 {
 	# Set up dotfiles dir
-	su "$user" -c "cd \"/home/${user}/.local/\"; git clone \"$DOTFILES_REPO\""
+	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/\""
 	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
 }
 
