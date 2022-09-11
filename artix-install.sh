@@ -174,8 +174,9 @@ install_packages()
 	# media utils, fonts, WM stuff + GUI programs
 	su "$user" -c "yay -S xorg-server xorg-xinit \
 	cmake python3 cxxopts-git \
-	vim rxvt-unicode zathura-git zathura-pdf-poppler-git openssh dmenu \
+	vim rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor \
+	openssh openssh-openrc openntpd openntpd-openrc\
 	ffmpeg mpv youtube-dl python-spotdl \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
@@ -187,6 +188,19 @@ set_dotlocal()
 	# Set up dotfiles dir
 	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/dotfiles\""
 	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
+}
+
+set_services()
+{
+# Add openrc services
+	:
+}
+
+set_vim_plugins()
+{
+	su "$user" -c "git clone https://github.com/VundleVim/Vundle.vim.git \
+		\"/home/${user}/.vim/bundle/Vundle.vim\""
+	su "$user" -c "vim +PluginInstall +qall"
 }
 
 parse_opts()
@@ -218,7 +232,9 @@ parse_opts()
 				set_home
 				set_yay
 				install_packages
-				set_dotlocal;;
+				set_dotlocal
+				set_services
+				set_vim_plugins;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
 				exit 0;;
