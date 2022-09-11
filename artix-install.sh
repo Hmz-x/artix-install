@@ -186,7 +186,7 @@ install_packages()
 set_dotlocal()
 {
 	# Set up dotfiles dir
-	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/\""
+	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/dotfiles\""
 	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
 }
 
