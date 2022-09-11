@@ -151,6 +151,16 @@ set_groups()
 	usermod "$user" -a -G network,wheel,audio,disk,input,storage,video,seatd
 }
 
+set_home()
+{
+	#su "$user" -c "mkdir -p \"/home/${user}/Documents/pics\" \"/home/${user}/Videos\" \
+		#\"/home/${user}/Music\" \"/home/${user}/Downloads\" \"/home/${user}/.config\" \
+		#\"/home/${user}/.local/builds\""
+	install -d --owner="$user" --group="$user" --mode=755 \
+		"/home/${user}/Documents/pics" "/home/${user}/Videos" "/home/${user}/Music" \
+		"/home/${user}/Documents/Downloads" "/home/${user}/.local/builds"
+}
+
 set_yay()
 {	
 	# Update packages & install git
@@ -167,58 +177,19 @@ install_packages()
 	# media utils, fonts, WM stuff + GUI programs
 	su "$user" -c "yay -S xorg-server xorg-xinit \
 	cmake python3 cxxopts-git \
-	vim rxvt-unicode zathura-git zathura-pdf-poppler-git openssh \
+	vim rxvt-unicode zathura-git zathura-pdf-poppler-git openssh dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor \
 	ffmpeg mpv youtube-dl python-spotdl \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
-	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git \
+	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
 	lemonbar-xft-git mpc-git mpd brave-bin"
-}
-
-set_home()
-{
-	su "$user" -c "mkdir -p \"/home/${user}/Documents/pics\" \"/home/${user}/Videos\" \
-		\"/home/${user}/Music\" \"/home/${user}/Downloads\" \"/home/${user}/.config\" \
-		\"/home/${user}/.local/builds\""
 }
 
 set_dotlocal()
 {
-	# Create .local directories
-	su "$user" -c "mkdir -p \"/home/${user}/.local/bin\" \"/home/${user}/.local/src\" \
-		\"/home/${user}/.local/lib\" \"/home/${user}/.local/share\""
-			
 	# Set up dotfiles dir
 	su "$user" -c "cd \"/home/${user}/.local/\"; git clone \"$DOTFILES_REPO\""
-
-	# Bash stuff
-	cp "/home/${user}/.local/dotfiles/bash/.bashrc" "/home/${user}/"
-	cp "/home/${user}/.local/dotfiles/bash/.bashrc" /root/
-	cp "/home/${user}/.local/dotfiles/bash/.bash_profile" "/home/${user}/"
-
-	# X stuff
-	cp "/home/${user}/.local/dotfiles/X/.xinitrc" "/home/${user}/"
-	cp "/home/${user}/.local/dotfiles/X/.Xresources" "/home/${user}/"
-
-	# WM, System, & Misc stuff
-	cp -r "/home/${user}/.local/dotfiles/WM" "/home/${user}/.local/bin/"
-	cp -r "/home/${user}/.local/dotfiles/misc" "/home/${user}/.local/bin/"
-	cp -r "/home/${user}/.local/dotfiles/system" "/home/${user}/.local/bin/"
-
-	# Etc stuff
-	cp "/home/${user}/.local/dotfiles/etc/"* /etc/
-
-	# Herbstluftwm stuff
-	su "$user" -c "mkdir \"/home/${user}/.config/herbstluftwm/\""
-	cp "/home/${user}/.local/dotfiles/herbstluftwm/autostart" \
-		"/home/${user}/.config/herbstluftwm/"
-	
-	# Mpd stuff
-	su "$user" -c "mkdir \"/home/${user}/.config/mpd/\""
-	cp "/home/${user}/.local/dotfiles/mpd/mpd.conf" "/home/${user}/.config/mpd/"
-
-	# Vim stuff
-	cp "/home/${user}/.local/dotfiles/vim/.vimrc" "/home/${user}/"
+	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
 }
 
 parse_opts()
