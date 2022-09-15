@@ -173,9 +173,9 @@ install_packages()
 	# Packages by line: X stuff, language utils, workflow utils, general utils, 
 	# media utils, fonts, WM stuff + GUI programs
 	su "$user" -c "yay -S xorg-server xorg-xinit \
-	cmake python3 python-pip cxxopts-git \
+	cmake python3 python-pip cxxopts-git jre-openjdk \
 	vim rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
-	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor \
+	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor xclip \
 	openssh openssh-openrc openntpd openntpd-openrc \
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-openrc \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
@@ -202,6 +202,7 @@ set_services()
 {
 	# Add openrc services
 	:
+	# Add ntpd to boot
 }
 
 set_vim_plugins()
