@@ -1,8 +1,5 @@
-Install another init system and modify script: openrc has 1 specific hostname file
-Add readme
 Cp to /tmp/ & unmount & execute
 Add disk partioning
 run the script only once
-vim plugins
 yay/pacman install only what's not installed
 reset module: userdel & rm homedir

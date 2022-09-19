@@ -119,6 +119,7 @@ set_users()
 	passwd
 
 	read -p "Enter new username: " username
+	confirm_in "$username"
 	useradd -m "$username"	
 
 	echo "Enter new password for $username."
@@ -129,6 +130,7 @@ network_config()
 {
 
 	read -p "Enter new hostname: " hostname
+	confirm_in "$hostname"
 	echo "$hostname" > /etc/hostname
 
 	echo "127.0.0.1        localhost" > /etc/hosts
@@ -144,12 +146,7 @@ network_config()
 get_username()
 {
 	read -p "Enter username: " user
-	read -p "Username is ${user}. Proceed: [Y/n] " user_ans
-
-	if [ -n "$user_ans" ] && [ "$user_ans" != "y" ] && [ "$user_ans" != "Y" ]; then
-		echo "Username is not confirmed. Exitting." 2>&1
-		exit 1
-	fi
+	confirm_in "$user"
 
 	# Add user if user does not exist on system
 	id "$user" &> /dev/null || { useradd -m "$user" && passwd "$user"; }
@@ -190,6 +187,7 @@ install_packages()
 	vim imagemagick rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-${init_sys} nm-connection-editor xclip \
 	openssh openssh-${init_sys} openntpd openntpd-${init_sys} cronie cronie-${init_sys} \
+	notify-send.sh xfce4-notifyd \
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
