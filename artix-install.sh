@@ -12,6 +12,17 @@ YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
 PROGRAM_HELP="usage: ${PROGRAM_NAME} [install_base] [config_base] [config_fresh]" 
 
+confirm_in()
+{
+	input="$1"
+	read -p "${input} - confirm input [Y/n]: " user_ans
+
+	if [ -n "$user_ans" ] && [ "$user_ans" != "y" ] && [ "$user_ans" != "Y" ]; then
+		echo "Input is not confirmed. Exitting." 2>&1
+		exit 1
+	fi
+}
+
 determine_boot()
 {
 	if [ -d /sys/firmware/efi ]; then
@@ -61,7 +72,7 @@ set_ethernet()
 
 install_sys()
 {
-	basestrap /mnt base base-devel seatd seatd-openrc
+	basestrap /mnt base base-devel seatd "seatd-${init_sys}"
 	basestrap /mnt linux linux-firmware
 }
 
@@ -123,8 +134,10 @@ network_config()
 	echo "127.0.0.1        localhost" > /etc/hosts
 	echo "::1			   localhost" >> /etc/hosts
 	echo "127.0.0.1        ${hostname}.localhost ${hostname}" >> /etc/hosts
+	
+	# extra openrc network configuration step
+	[ "$init_sys" = "openrc" ] && echo "hostname='${hostname}'" > /etc/conf.d/hostname
 
-	echo "hostname='${hostname}'" > /etc/conf.d/hostname
 	pacman -S dhclient
 }
 
@@ -174,13 +187,13 @@ install_packages()
 	# media utils, fonts, WM stuff + GUI programs
 	su "$user" -c "yay -S xorg-server xorg-xinit \
 	cmake python3 python-pip cxxopts-git jre-openjdk \
-	vim rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
-	man-db aspell aspell-en acpi networkmanager networkmanager-openrc nm-connection-editor xclip \
-	openssh openssh-openrc openntpd openntpd-openrc \
-	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-openrc \
+	vim imagemagick rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
+	man-db aspell aspell-en acpi networkmanager networkmanager-${init_sys} nm-connection-editor xclip \
+	openssh openssh-${init_sys} openntpd openntpd-${init_sys} cronie cronie-${init_sys} \
+	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
-	lemonbar-xft-git mpc-git mpd brave-bin"
+	lemonbar-xft-git mpc-git mpd brave-bin dolphin qt5ct oxygen oxygen-cursors ttf-oxygen-gf"
 	
 	# Pip packages
 	su "$user" -c "pip3 install pirate-get"
@@ -200,9 +213,13 @@ set_dotlocal()
 
 set_services()
 {
-	# Add openrc services
-	:
-	# Add ntpd to boot
+	# Set up services
+	if [ "$init_sys" = "openrc" ]; then
+		rc-update add ntpd boot default
+		rc-update add sshd default
+		rc-update add deluged default
+		rc-update add cronie default
+	fi
 }
 
 set_vim_plugins()
@@ -221,7 +238,13 @@ parse_opts()
 
 	# Parse and evaluate each option one by one 
 	while [ "$#" -gt 0 ]; do
+		# Set default init sys to be openrc
+		init_sys="$2"
+
 		case "$1" in
+			-i|--init)
+				init_sys="$2"
+				shift;;
 			install_base)
 				determine_boot
 				format_partitions
