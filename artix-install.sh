@@ -173,6 +173,7 @@ set_yay()
 	# Update packages & install git
 	pacman -Syu
 	pacman -S git
+	su "$user" -c "git config --global credential.helper store"
 
 	su "$user" -c "cd \"/home/${user}/.local/builds\" && git clone \"$YAY_REPO\" &&
 		cd yay && makepkg -si"
