@@ -72,7 +72,7 @@ set_ethernet()
 
 install_sys()
 {
-	basestrap /mnt base base-devel seatd "seatd-${init_sys}"
+	basestrap /mnt base base-devel "$init_sys" "seatd-${init_sys}"
 	basestrap /mnt linux linux-firmware
 }
 
@@ -234,11 +234,11 @@ parse_opts()
 		exit 1
 	fi
 
+	# Set default init sys to be openrc
+	init_sys="openrc"
+
 	# Parse and evaluate each option one by one 
 	while [ "$#" -gt 0 ]; do
-		# Set default init sys to be openrc
-		init_sys="$2"
-
 		case "$1" in
 			-i|--init)
 				init_sys="$2"
@@ -257,6 +257,7 @@ parse_opts()
 				set_users
 				network_config;;
 			config_fresh)
+				set_ethernet
 				get_username
 				set_groups
 				set_home
@@ -275,4 +276,4 @@ parse_opts()
 	done
 }
 
-parse_opts $@
+parse_opts "$@"

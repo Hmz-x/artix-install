@@ -3,3 +3,5 @@ Add disk partioning
 run the script only once
 yay/pacman install only what's not installed
 reset module: userdel & rm homedir
+
+create crontab file under ~/.local/dotfiles/crontab/...
