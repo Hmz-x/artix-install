@@ -192,7 +192,7 @@ install_packages()
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
-	lemonbar-xft-git mpc-git mpd brave-bin dolphin qt5ct oxygen oxygen-cursors ttf-oxygen-gf"
+	lemonbar-xft-git mpc-git mpd brave-bin dolphin qt5ct oxygen oxygen-icons oxygen-cursors ttf-oxygen-gf"
 	
 	# Pip packages
 	su "$user" -c "pip3 install pirate-get"
