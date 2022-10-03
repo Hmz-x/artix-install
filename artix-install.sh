@@ -10,7 +10,7 @@ LOCALE_2="en_US.UTF-8 UTF-8"
 DOTFILES_REPO='https://github.com/Hmz-x/dotfiles'
 YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
-PROGRAM_HELP="usage: ${PROGRAM_NAME} [install_base] [config_base] [config_fresh]" 
+PROGRAM_HELP="usage: ${PROGRAM_NAME} [-i|--init INIT_SYS] [install_base] [config_base] [config_fresh]" 
 
 confirm_in()
 {
@@ -172,7 +172,7 @@ set_yay()
 {	
 	# Update packages & install git
 	pacman -Syu
-	pacman -S git
+	pacman -S git go
 	su "$user" -c "git config --global credential.helper store"
 
 	su "$user" -c "cd \"/home/${user}/.local/builds\" && git clone \"$YAY_REPO\" &&
@@ -188,7 +188,7 @@ install_packages()
 	vim imagemagick rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-${init_sys} nm-connection-editor xclip \
 	openssh openssh-${init_sys} openntpd openntpd-${init_sys} cronie cronie-${init_sys} \
-	notify-send.sh xfce4-notifyd \
+	notify-send.sh xfce4-notifyd abeep-git scrot \
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
