@@ -98,8 +98,9 @@ set_time()
 	echo "$LOCALE_2" >> /etc/locale.gen
 	locale-gen
 	
-	echo "export LANG=\"${LOCALE_2}\"" > /etc/locale.conf
-	echo "export LC_COLLATE=\"C\"" > /etc/locale.conf
+	locale_str="$(echo "$LOCALE_2" | cut -d ' ' -f 1)"
+	echo "export LANG=\"${locale_str}\"" > /etc/locale.conf
+	echo "export LC_COLLATE=\"C\"" >> /etc/locale.conf
 }
 
 set_bootloader()
@@ -188,7 +189,7 @@ install_packages()
 	vim imagemagick rxvt-unicode zathura-git zathura-pdf-poppler-git dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-${init_sys} nm-connection-editor xclip \
 	openssh openssh-${init_sys} openntpd openntpd-${init_sys} cronie cronie-${init_sys} \
-	notify-send.sh xfce4-notifyd abeep-git scrot \
+	notify-send.sh xfce4-notifyd abeep-git scrot ccrypt \
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
