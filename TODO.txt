@@ -1,7 +1,0 @@
-Cp to /tmp/ & unmount & execute
-Add disk partioning
-yay/pacman install only what's not installed
-
-run the script only once
-
-reset module: userdel & rm homedir

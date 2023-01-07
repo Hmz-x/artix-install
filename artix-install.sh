@@ -1,5 +1,18 @@
 #!/bin/sh
 
+# HOW TO USE
+# Boot into live environment
+# Mount usb and copy artix-install.sh to / and unmount usb
+# Have ethernet connected
+# Format partitions sda2 30G (root), sda1 1G (swap), sda4 1G (boot), sda3 rest (home)
+# Run /root/artix-install.sh -i INIT_SYS install_base
+# Enter bash shell and sudo su
+# Run /root/artix-install.sh -i INIT_SYS config_base
+# exit bash shell, exit chroot environment, umount -R /mnt, reboot, remove installation media
+# Run /root/artix-install.sh -i INIT_SYS config_fresh
+# Upon package installation failure: rerun /root/artix-install.sh -i INIT_SYS config_fresh
+# Reboot
+
 # Program config data
 IFACE="eth0"
 ZONE="America/Indiana/Indianapolis"
@@ -192,7 +205,7 @@ install_packages()
 	notify-send.sh xfce4-notifyd abeep-git scrot ccrypt \
 	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
-	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift \
+	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift polybar \
 	lemonbar-xft-git mpc-git mpd firefox librewolf-bin dolphin qt5ct oxygen oxygen-icons oxygen-cursors ttf-oxygen-gf"
 	
 	# Pip packages
