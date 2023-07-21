@@ -1,15 +1,17 @@
-#!/bin/sh
+#!/bin/sh -x
 
 # HOW TO USE
-# Boot into live environment
-# Mount usb and copy artix-install.sh to / and unmount usb
-# Have ethernet connected
-# Format partitions sda2 30G (root), sda1 1G (swap), sda4 1G (boot), sda3 rest (home)
-# Run /root/artix-install.sh -i INIT_SYS install_base
-# Enter bash shell and sudo su
-# Run /root/artix-install.sh -i INIT_SYS config_base
-# exit bash shell, exit chroot environment, umount -R /mnt, reboot, remove installation media
-# Run /root/artix-install.sh -i INIT_SYS config_fresh
+# 1) Boot into live environment
+# 2) Mount usb and copy artix-install.sh to /root and unmount usb
+# 3) Have ethernet connected
+# 4) Format partitions sda2 30G (root), sda1 1G (swap), sda4 1G (boot), sda3 rest (home)
+# 5) Run /root/artix-install.sh -i INIT_SYS install_base
+# 6) Enter bash shell and sudo su
+# 7) Repeat #2
+# 8) Run /root/artix-install.sh -i INIT_SYS config_base
+# 9) exit bash shell, exit chroot environment, umount -R /mnt, reboot, remove installation media
+# 10) Run /root/artix-install.sh -i INIT_SYS config_fresh
+# 11) Run /root/artix-install.sh -i INIT_SYS config_pkgs
 # Upon package installation failure: rerun /root/artix-install.sh -i INIT_SYS config_fresh
 # Reboot
 
@@ -24,6 +26,14 @@ DOTFILES_REPO='https://github.com/Hmz-x/dotfiles'
 YAY_REPO='https://aur.archlinux.org/yay.git'
 PROGRAM_NAME="artix-install.sh"
 PROGRAM_HELP="usage: ${PROGRAM_NAME} [-i|--init INIT_SYS] [install_base] [config_base] [config_fresh]" 
+
+root_check()
+{
+	if (($UID!=0)); then
+		echo "Run as root. Exitting." 2>&1
+		exit 1
+	fi
+}
 
 confirm_in()
 {
@@ -185,36 +195,37 @@ set_home()
 set_yay()
 {	
 	# Update packages & install git
-	pacman -Syu
-	pacman -S git go
-	su "$user" -c "git config --global credential.helper store"
+	sudo pacman -Syu
+	sudo pacman -S git go
+	git config --global credential.helper store
 
-	su "$user" -c "cd \"/home/${user}/.local/builds\" && git clone \"$YAY_REPO\" &&
-		cd yay && makepkg -si"
+	cd "/home/${user}/.local/builds" && git clone "$YAY_REPO" && cd yay && makepkg -si
 }
 
 install_packages()
 {
+	#[ -z "$init_sys" ] && echo "init_sys is not set. Returning" && return
+
 	# Packages by line: X stuff, language utils, workflow utils, general utils, 
 	# media utils, fonts, WM stuff + GUI programs
-	su "$user" -c "yay -S xorg-server xorg-xinit \
-	cmake python3 python-pip cxxopts-git jre-openjdk \
+	yay -S xorg-server xorg-xinit \
+	cmake python python-pip cxxopts-git jre-openjdk \
 	vim imagemagick xterm alacritty-git zathura-git zathura-pdf-poppler-git dmenu \
 	man-db aspell aspell-en acpi networkmanager networkmanager-${init_sys} nm-connection-editor xclip \
 	openssh openssh-${init_sys} openntpd openntpd-${init_sys} cronie cronie-${init_sys} \
 	notify-send.sh xfce4-notifyd abeep-git scrot ccrypt \
-	ffmpeg mpv youtube-dl python-spotdl deluge-gtk deluge-${init_sys} \
+	ffmpeg mpv youtube-dl deluge-gtk deluge-${init_sys} \
 	noto-fonts noto-fonts-emoji noto-fonts-extra ttf-font-awesome \
 	herbstluftwm picom feh timeshift pulseaudio pulseaudio-alsa pamixer-git redshift polybar \
-	lemonbar-xft-git mpc-git mpd firefox librewolf-bin dolphin qt5ct oxygen oxygen-icons oxygen-cursors ttf-oxygen-gf"
+	lemonbar-xft-git mpc-git mpd firefox librewolf-bin dolphin qt5ct oxygen oxygen-icons oxygen-cursors ttf-oxygen-gf
 	
 	# Pip packages
-	su "$user" -c "pip3 install pirate-get"
+	pip3 install pirate-get python-spotdl
 	
 	# Repositories
-	su "$user" -c "cd \"/home/${user}/.local/builds/\" && 
-		git clone https://github.com/sysstat/sysstat && cd sysstat && ./configure && make"
-	cd "/home/${user}/.local/builds/sysstat/" && make install
+	cd "/home/${user}/.local/builds/" && 
+		git clone "https://github.com/sysstat/sysstat" && cd sysstat && ./configure && make
+	cd "/home/${user}/.local/builds/sysstat/" && sudo make install
 }
 
 set_dotlocal()
@@ -222,6 +233,12 @@ set_dotlocal()
 	# Set up dotfiles dir
 	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/dotfiles\""
 	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
+
+	# Reboot for changes to sudoers file to take place
+	read -p "Press enter key to reboot in order for sudo permissions to apply to user..."
+	echo "Log back in as regular user after reboot..."
+	sleep 3
+	reboot
 }
 
 set_services()
@@ -244,11 +261,7 @@ set_vim_plugins()
 
 parse_opts()
 {
-	if (($UID!=0)); then
-		echo "Run as root. Exitting." 2>&1
-		exit 1
-	fi
-
+	
 	# Set default init sys to be openrc
 	init_sys="openrc"
 
@@ -259,6 +272,7 @@ parse_opts()
 				init_sys="$2"
 				shift;;
 			install_base)
+				root_check
 				determine_boot
 				format_partitions
 				mount_partitions
@@ -266,6 +280,7 @@ parse_opts()
 				install_sys
 				fstab_n_chroot;;
 			config_base)
+				root_check
 				determine_boot
 				set_time
 				set_bootloader
@@ -276,11 +291,13 @@ parse_opts()
 				get_username
 				set_groups
 				set_home
-				set_yay
-				install_packages
-				set_dotlocal
-				set_services
-				set_vim_plugins;;
+				set_dotlocal;;
+			#config_pkgs)
+				#set_yay
+				#install_packages
+				#set_dotlocal
+				#set_services
+				#set_vim_plugins;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
 				exit 0;;
