@@ -234,6 +234,9 @@ set_dotlocal()
 	su "$user" -c "git clone \"$DOTFILES_REPO\" \"/home/${user}/.local/dotfiles\""
 	"/home/${user}/.local/dotfiles/dotfiles-install.sh" "$user"
 
+	# Copy artix-install to user /home/${user}/.local/bin/
+	cp -vr /root/artix-install "/home/${user}/.local/bin"
+
 	# Reboot for changes to sudoers file to take place
 	read -p "Press enter key to reboot in order for sudo permissions to apply to user..."
 	echo "Log back in as regular user after reboot..."
