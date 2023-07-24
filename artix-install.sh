@@ -237,6 +237,9 @@ set_dotlocal()
 	# Copy artix-install to user /home/${user}/.local/bin/
 	cp -vr /root/artix-install "/home/${user}/.local/bin"
 
+	# Change owner to be $user
+	chown -R "${user}:${user}" "/home/${user}/.local/bin/artix-install"
+
 	# Reboot for changes to sudoers file to take place
 	read -p "Press enter key to reboot in order for sudo permissions to apply to user..."
 	echo "Log back in as regular user after reboot..."
