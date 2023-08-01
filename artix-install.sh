@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 # HOW TO USE
 # 1) Boot into live environment
@@ -11,9 +11,10 @@
 # 8) Run /root/artix-install.sh -i INIT_SYS config_base
 # 9) exit bash shell, exit chroot environment, umount -R /mnt, reboot, remove installation media
 # 10) Run /root/artix-install.sh -i INIT_SYS config_fresh
-# 11) Run /root/artix-install.sh -i INIT_SYS config_pkgs
-# Upon package installation failure: rerun /root/artix-install.sh -i INIT_SYS config_fresh
-# Reboot
+# 11) Log back in as regular user. Source ~/.local/bin/artix-install/artix-install.sh. 
+# 12) Run init_sys=INIT_SYS; set_yay; install_packages
+# 13) Run sudo artix-install.sh -i INIT_SYS finish_setup
+# 14) Reboot
 
 # Program config data
 IFACE="eth0"
@@ -204,7 +205,7 @@ set_yay()
 
 install_packages()
 {
-	#[ -z "$init_sys" ] && echo "init_sys is not set. Returning" && return
+	[ -z "$init_sys" ] && echo "init_sys is not set. Returning" && return
 
 	# Packages by line: X stuff, language utils, workflow utils, general utils, 
 	# media utils, fonts, WM stuff + GUI programs
@@ -293,17 +294,16 @@ parse_opts()
 				set_users
 				network_config;;
 			config_fresh)
+				root_check
 				set_ethernet
 				get_username
 				set_groups
 				set_home
 				set_dotlocal;;
-			#config_pkgs)
-				#set_yay
-				#install_packages
-				#set_dotlocal
-				#set_services
-				#set_vim_plugins;;
+			finish_setup)
+				root_check
+				set_services
+				set_vim_plugins;;
 			-h|--help)
 				printf -- "%s\n" "$PROGRAM_HELP"
 				exit 0;;
